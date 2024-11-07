@@ -1,7 +1,1 @@
-Speech Dysarthria Detection
-
-Members:
-|Name|StudentID|
-|----|---------|
-|Aymen Zubair|st125405|
-|Arya Shah|st125462|
+# ADAPTIVE: A Novel Dataset For Acoustic DysArthria deTection through temPoral Inference and Voice Engineering
