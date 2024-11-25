@@ -1,0 +1,12 @@
+pandas==2.2.2
+numpy==2.0.1
+streamlit==1.37.1
+librosa==0.10.2
+soundfile
+audio-recorder-streamlit
+praat-parselmouth
+scipy
+lightgbm
+scikit-learn
+matplotlib
+pickle-mixin
