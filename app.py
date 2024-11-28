@@ -13,6 +13,8 @@ import pickle
 import matplotlib.pyplot as plt
 import librosa.display
 import parselmouth
+import lime
+import lime.lime_tabular
 
 def extract_features(y, sr):
     features = {}
@@ -88,7 +90,6 @@ def extract_features(y, sr):
 def extract_features_with_visualization(y, sr):
     features = extract_features(y, sr)
     
-    # Create visualization section
     st.subheader("Audio Visualizations")
     
     # Waveform
@@ -145,6 +146,33 @@ def extract_features_with_visualization(y, sr):
 
     return features
 
+def get_lime_explanation(model_data, features):
+    # Create a prediction function that handles scaling internally
+    def predict_fn(x):
+        scaled_x = model_data['scaler'].transform(x)
+        return model_data['model'].predict_proba(scaled_x)
+    
+    # Create the explainer using the current features as training data
+    explainer = lime.lime_tabular.LimeTabularExplainer(
+        training_data=model_data['scaler'].transform(features),
+        feature_names=features.columns,
+        class_names=['No Dysarthria', 'Dysarthria'],
+        mode='classification',
+        discretize_continuous=True
+    )
+    
+    # Generate explanation
+    exp = explainer.explain_instance(
+        features.iloc[0],
+        predict_fn,
+        num_features=15
+    )
+    #print the raw lime explanation
+    print(exp.as_list())
+    
+    fig = exp.as_pyplot_figure()
+    return fig
+
 def load_model():
     with open('LGBM_CPU_final.pkl', 'rb') as f:
         model_data = pickle.load(f)
@@ -161,7 +189,7 @@ def process_audio_with_visualization(audio_path):
     features = extract_features_with_visualization(y, sr)
     return features
 
-def display_results(prediction, probability):
+def display_results(prediction, probability, features, model_data):
     st.markdown("---")
     st.subheader("Prediction Results")
     
@@ -177,6 +205,11 @@ def display_results(prediction, probability):
     
     with col2:
         st.metric("Confidence", f"{prob_value:.2%}")
+    
+    st.write("LIME Explanation (Local Feature Importance)")
+    lime_fig = get_lime_explanation(model_data, features)
+    st.pyplot(lime_fig)
+    plt.close()
 
 def main():
     st.set_page_config(
@@ -202,7 +235,7 @@ def main():
                     features = process_audio_with_visualization(audio_path)
                     model_data = load_model()
                     prediction, probability = predict(features, model_data)
-                    display_results(prediction, probability)
+                    display_results(prediction, probability, features, model_data)
                 os.unlink(audio_path)
     
     with tab2:
@@ -220,7 +253,7 @@ def main():
                     features = process_audio_with_visualization(audio_path)
                     model_data = load_model()
                     prediction, probability = predict(features, model_data)
-                    display_results(prediction, probability)
+                    display_results(prediction, probability, features, model_data)
                 os.unlink(audio_path)
 
 if __name__ == "__main__":
