@@ -10,3 +10,4 @@ lightgbm
 scikit-learn
 matplotlib
 pickle-mixin
+lime
